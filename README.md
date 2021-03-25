@@ -1,4 +1,5 @@
 **Added ETA based on current playback speed, so you know when your video lesson is going to be over 😉**
+![ETA](https://github.com/ferraridavide/videospeed/blob/master/preview.png)
 
 # The science of accelerated playback
 
