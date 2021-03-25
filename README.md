@@ -1,3 +1,5 @@
+**Added ETA based on current playback speed, so you know when your video lesson is going to be over 😉**
+
 # The science of accelerated playback
 
 **TL;DR: faster playback translates to better engagement and retention.**
