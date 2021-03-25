@@ -232,6 +232,11 @@ function defineVideoController() {
     );
 
     target.addEventListener(
+      "pause",
+      (this.handlePlay = mediaEventAction.bind(this))
+    );
+
+    target.addEventListener(
       "seeked",
       (this.handleSeek = mediaEventAction.bind(this))
     );
@@ -273,6 +278,11 @@ function defineVideoController() {
     log("initializeControls Begin", 5);
     const document = this.video.ownerDocument;
     const speed = this.video.playbackRate.toFixed(2);
+    var d = new Date();
+    d.setSeconds(
+      d.getSeconds() + (this.video.duration - this.video.currentTime) / speed
+    );
+    const eta = d.toLocaleTimeString();
     const rect = this.video.getBoundingClientRect();
     const top = Math.max(rect.top, 0) + "px";
     const left = Math.max(rect.left, 0) + "px";
@@ -299,13 +309,14 @@ function defineVideoController() {
         <div id="controller" style="top:${top}; left:${left}; opacity:${
       tc.settings.controllerOpacity
     }">
-          <span data-action="drag" class="draggable">${speed}</span>
+          <span data-action="drag" class="draggable" id="speed">${speed}</span>
           <span id="controls">
             <button data-action="rewind" class="rw">«</button>
             <button data-action="slower">&minus;</button>
             <button data-action="faster">&plus;</button>
             <button data-action="advance" class="rw">»</button>
             <button data-action="display" class="hideButton">&times;</button>
+			<span data-action="drag" class="draggable" id="eta">${eta}</span>
           </span>
         </div>
       `;
@@ -341,7 +352,8 @@ function defineVideoController() {
       .querySelector("#controller")
       .addEventListener("mousedown", (e) => e.stopPropagation(), false);
 
-    this.speedIndicator = shadow.querySelector("span");
+    this.speedIndicator = shadow.getElementById("speed");
+    this.etaIndicator = shadow.getElementById("eta");
     var fragment = document.createDocumentFragment();
     fragment.appendChild(wrapper);
 
@@ -427,8 +439,7 @@ function setupListener() {
   function updateSpeedFromEvent(video) {
     // It's possible to get a rate change on a VIDEO/AUDIO that doesn't have
     // a video controller attached to it.  If we do, ignore it.
-    if (!video.vsc)
-      return;
+    if (!video.vsc) return;
     var speedIndicator = video.vsc.speedIndicator;
     var src = video.currentSrc;
     var speed = Number(video.playbackRate.toFixed(2));
@@ -654,8 +665,7 @@ function initializeNow(document) {
                   (x) => x.tagName == "VIDEO"
                 )[0];
                 if (node) {
-                  if (node.vsc)
-                    node.vsc.remove();
+                  if (node.vsc) node.vsc.remove();
                   checkForVideo(node, node.parentNode || mutation.target, true);
                 }
               }
@@ -709,6 +719,14 @@ function setSpeed(video, speed) {
   }
   var speedIndicator = video.vsc.speedIndicator;
   speedIndicator.textContent = speedvalue;
+  var etaIndicator = video.vsc.etaIndicator;
+  if (video.paused) {
+    etaIndicator.textContent = "---";
+  } else {
+    var d = new Date();
+    d.setSeconds(d.getSeconds() + (video.duration - video.currentTime) / speed);
+    etaIndicator.textContent = d.toLocaleTimeString();
+  }
   tc.settings.lastSpeed = speed;
   refreshCoolDown();
   log("setSpeed finished: " + speed, 5);
